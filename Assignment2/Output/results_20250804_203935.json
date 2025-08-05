@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-08-04T20:39:35.904605",
+  "system_parameters": {
+    "pendulum_mass_kg": 2.0,
+    "pendulum_length_m": 0.3,
+    "shaft_diameters_mm": {
+      "Da": 20.0,
+      "Db": 30.0,
+      "Dc": 40.0,
+      "Dd": 50.0,
+      "De": 65.0
+    },
+    "gearbox_ratio": 10.0
+  },
+  "calculated_forces_N": {
+    "F_ab": 850.2,
+    "F_bc": 478.238,
+    "F_cd": 306.072,
+    "F_de": 181.108
+  },
+  "calculated_torques_Nm": {
+    "motor_torque": 1.913,
+    "after_gearbox": 19.1295,
+    "pendulum_load": 5.886
+  },
+  "verification": {
+    "total_reduction_ratio": 32.50000000000001,
+    "T_motor_alternative": 0.18110769230769228,
+    "error_percentage": 956.2500000000003
+  }
+}

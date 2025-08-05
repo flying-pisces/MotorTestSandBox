@@ -1,0 +1,5 @@
+Rope_Segment,Force_N,Shaft_From,Shaft_To,Diameter_From_mm,Diameter_To_mm
+AB,392.400,A,B,20.0,30.0
+BC,294.300,B,C,30.0,40.0
+CD,235.440,C,D,40.0,50.0
+DE,181.108,D,E,50.0,65.0
