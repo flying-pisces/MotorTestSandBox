@@ -1,0 +1,21 @@
+Parameter,Value,Unit/Type,Category
+base_length,800.0,mm,Base Frame
+base_width,600.0,mm,Base Frame
+base_height,150.0,mm,Base Frame
+base_material,Cast_Iron_GG25,various,Base Frame
+base_mass,180.0,kg,Base Frame
+motor_stator_diameter,85.0,mm,Motor
+motor_stator_length,44.4,mm,Motor
+motor_rotor_bore,52.0,various,Motor
+motor_rated_torque,3.3,Nm,Motor
+housing_outer_diameter,150.0,mm,Housing
+housing_length,80.0,mm,Housing
+housing_material,Aluminum_6061_T6,various,Housing
+shaft_diameter,50.0,mm,Shaft
+shaft_length,400.0,mm,Shaft
+shaft_material,Tool_Steel_D2,various,Shaft
+sensor_model,HBK_T210_10Nm,various,Sensor
+sensor_range,10.0,various,Sensor
+sensor_accuracy,0.1,mm,Sensor
+alignment_tolerance,0.02,mm,Tolerances
+parallelism_tolerance,0.05,mm,Tolerances
