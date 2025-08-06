@@ -43,7 +43,7 @@ const int MAX_CYCLES = 1000;           // maximum test cycles
 volatile bool g_running = true;
 
 // Signal handler for clean shutdown
-void signalHandler(int signum) {
+void signalHandler(int /* signum */) {
     std::cout << "\nShutdown signal received. Stopping motor safely...\n";
     g_running = false;
 }
@@ -72,7 +72,7 @@ private:
     std::vector<CycleData> cycle_log_;
     std::ofstream log_file_;
     
-    auto start_time_;
+    std::chrono::steady_clock::time_point start_time_;
     
 public:
     PendulumController() : 

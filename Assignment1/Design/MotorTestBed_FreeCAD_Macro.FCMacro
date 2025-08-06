@@ -1,0 +1,134 @@
+# FreeCAD Macro: Motor Test Bed Generator
+# Generated from Assignment 1 parametric design
+# Usage: Open FreeCAD, run this macro from Macro menu
+
+import FreeCAD as App
+import Part
+import PartDesign
+
+# Design Parameters
+DESIGN_PARAMETERS = {'base_length': 800.0, 'base_width': 600.0, 'base_height': 150.0, 'base_material': 'Cast_Iron_GG25', 'base_mass': 180.0, 'motor_stator_diameter': 85.0, 'motor_stator_length': 44.4, 'motor_rotor_bore': 52.0, 'motor_rotor_length': 31.2, 'motor_mass': 0.822, 'motor_rated_torque': 3.3, 'motor_peak_torque': 10.64, 'motor_max_speed': 2570, 'housing_outer_diameter': 150.0, 'housing_length': 80.0, 'housing_bore_diameter': 85.0, 'housing_bore_tolerance': 'U6', 'housing_material': 'Aluminum_6061_T6', 'housing_cooling_fins': True, 'housing_fin_height': 15.0, 'housing_fin_count': 12, 'shaft_diameter': 50.0, 'shaft_length': 400.0, 'shaft_material': 'Tool_Steel_D2', 'shaft_hardness': 'HRC_58-62', 'shaft_surface_finish': 0.4, 'bearing_type': 'SKF_7010', 'bearing_bore': 50.0, 'bearing_outer_diameter': 80.0, 'bearing_width': 16.0, 'bearing_precision_grade': 'P4', 'sensor_model': 'HBK_T210_10Nm', 'sensor_range': 10.0, 'sensor_accuracy': 0.1, 'sensor_length': 150.0, 'sensor_input_shaft': 25.0, 'sensor_output_shaft': 25.0, 'load_type': 'Hysteresis_Brake', 'load_torque_capacity': 15.0, 'load_speed_capacity': 5000, 'load_cooling': 'Air_Cooled', 'torque_safety_factor': 1.5, 'speed_safety_factor': 2.0, 'structural_safety_factor': 3.0, 'alignment_tolerance': 0.02, 'parallelism_tolerance': 0.05, 'position_repeatability': 0.01, 'motor_drive_voltage': 48.0, 'motor_drive_current': 25.0, 'data_acquisition_rate': 1000, 'temperature_sensors': 6, 'operating_temp_min': 15.0, 'operating_temp_max': 40.0, 'humidity_max': 80.0, 'vibration_isolation_freq': 5.0}
+
+def create_base_frame():
+    """Create the main base frame for the test bed"""
+    doc = App.ActiveDocument
+    if not doc:
+        doc = App.newDocument("MotorTestBed")
+    
+    # Create base frame body
+    base = doc.addObject("Part::Box", "BaseFrame")
+    base.Length = DESIGN_PARAMETERS['base_length']
+    base.Width = DESIGN_PARAMETERS['base_width']
+    base.Height = DESIGN_PARAMETERS['base_height']
+    base.Placement = App.Placement(
+        App.Vector(-DESIGN_PARAMETERS['base_length']/2, 
+                  -DESIGN_PARAMETERS['base_width']/2, 0),
+        App.Rotation(0, 0, 0, 1)
+    )
+    
+    doc.recompute()
+    return base
+
+def create_motor_housing():
+    """Create the aluminum housing for the motor stator"""
+    doc = App.ActiveDocument
+    
+    # Outer housing cylinder
+    outer_cylinder = doc.addObject("Part::Cylinder", "HousingOuter")
+    outer_cylinder.Radius = DESIGN_PARAMETERS['housing_outer_diameter'] / 2
+    outer_cylinder.Height = DESIGN_PARAMETERS['housing_length']
+    outer_cylinder.Placement = App.Placement(
+        App.Vector(0, 0, DESIGN_PARAMETERS['base_height']),
+        App.Rotation(0, 0, 0, 1)
+    )
+    
+    # Inner bore for stator
+    inner_cylinder = doc.addObject("Part::Cylinder", "HousingBore")
+    inner_cylinder.Radius = DESIGN_PARAMETERS['housing_bore_diameter'] / 2
+    inner_cylinder.Height = DESIGN_PARAMETERS['housing_length'] + 10  # Through hole
+    inner_cylinder.Placement = App.Placement(
+        App.Vector(0, 0, DESIGN_PARAMETERS['base_height'] - 5),
+        App.Rotation(0, 0, 0, 1)
+    )
+    
+    # Create housing with bore
+    housing = doc.addObject("Part::Cut", "MotorHousing")
+    housing.Base = outer_cylinder
+    housing.Tool = inner_cylinder
+    
+    doc.recompute()
+    return housing
+
+def create_shaft():
+    """Create the main shaft"""
+    doc = App.ActiveDocument
+    
+    shaft = doc.addObject("Part::Cylinder", "MainShaft")
+    shaft.Radius = DESIGN_PARAMETERS['shaft_diameter'] / 2
+    shaft.Height = DESIGN_PARAMETERS['shaft_length']
+    shaft.Placement = App.Placement(
+        App.Vector(0, 0, DESIGN_PARAMETERS['base_height'] - DESIGN_PARAMETERS['shaft_length']/4),
+        App.Rotation(0, 0, 0, 1)
+    )
+    
+    doc.recompute()
+    return shaft
+
+def create_sensor_mount():
+    """Create sensor mounting plate"""
+    doc = App.ActiveDocument
+    
+    mount = doc.addObject("Part::Box", "SensorMount")
+    mount.Length = 200
+    mount.Width = 150
+    mount.Height = 25
+    mount.Placement = App.Placement(
+        App.Vector(50, -75, DESIGN_PARAMETERS['base_height']),
+        App.Rotation(0, 0, 0, 1)
+    )
+    
+    doc.recompute()
+    return mount
+
+def generate_assembly():
+    """Generate the complete test bed assembly"""
+    print("Generating Motor Test Bed Assembly in FreeCAD...")
+    
+    # Create new document
+    doc = App.newDocument("MotorTestBed")
+    
+    # Create components
+    base = create_base_frame()
+    housing = create_motor_housing()
+    shaft = create_shaft()
+    sensor_mount = create_sensor_mount()
+    
+    # Set materials (as labels)
+    base.Label = "Base Frame (Cast Iron)"
+    housing.Label = "Motor Housing (Al 6061-T6)"
+    shaft.Label = "Main Shaft (Tool Steel D2)"
+    sensor_mount.Label = "Sensor Mount (Steel)"
+    
+    # Color components
+    base.ViewObject.ShapeColor = (0.5, 0.5, 0.5)      # Gray
+    housing.ViewObject.ShapeColor = (0.8, 0.8, 0.9)    # Light Blue
+    shaft.ViewObject.ShapeColor = (0.9, 0.9, 0.7)      # Light Yellow  
+    sensor_mount.ViewObject.ShapeColor = (0.7, 0.7, 0.9) # Light Purple
+    
+    doc.recompute()
+    
+    # Fit view
+    App.Gui.SendMsgToActiveView("ViewFit")
+    
+    print("Assembly generation complete!")
+    print(f"Components created:")
+    print(f"  - Base Frame: {DESIGN_PARAMETERS['base_length']}x{DESIGN_PARAMETERS['base_width']}x{DESIGN_PARAMETERS['base_height']} mm")
+    print(f"  - Motor Housing: Ø{DESIGN_PARAMETERS['housing_outer_diameter']}mm x {DESIGN_PARAMETERS['housing_length']}mm")
+    print(f"  - Main Shaft: Ø{DESIGN_PARAMETERS['shaft_diameter']}mm x {DESIGN_PARAMETERS['shaft_length']}mm")
+    print(f"  - Torque Sensor: {DESIGN_PARAMETERS['sensor_model']}")
+    
+    return doc
+
+# Run the assembly generation
+if __name__ == "__main__":
+    generate_assembly()
