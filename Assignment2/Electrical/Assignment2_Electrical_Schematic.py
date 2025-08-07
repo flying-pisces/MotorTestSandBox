@@ -69,22 +69,84 @@ def draw_component_box(ax, x, y, width, height, color, label, sublabel="",
                 ax.text(term_x, term_y + offset_y, pin_labels[i], 
                        ha='center', va='center', fontsize=7)
 
-def draw_wire(ax, start, end, color=COLOR_WIRE_SIGNAL, style='-', width=2, label=""):
-    """Draw a wire connection between two points"""
+def draw_wire(ax, points, color=COLOR_WIRE_SIGNAL, style='-', width=2, label="", junction_points=None):
+    """Draw a wire connection with proper orthogonal routing"""
     
-    x1, y1 = start
-    x2, y2 = end
+    if len(points) < 2:
+        return
+        
+    # Draw wire segments
+    for i in range(len(points) - 1):
+        x1, y1 = points[i]
+        x2, y2 = points[i + 1]
+        ax.plot([x1, x2], [y1, y2], color=color, linestyle=style, linewidth=width)
     
-    # Draw the wire
-    ax.plot([x1, x2], [y1, y2], color=color, linestyle=style, linewidth=width)
+    # Draw junction dots at T-connections
+    if junction_points:
+        for jx, jy in junction_points:
+            ax.plot(jx, jy, 'ko', markersize=4, markerfacecolor='black')
     
-    # Add voltage/current label if specified
+    # Add wire label if specified
     if label:
-        mid_x = (x1 + x2) / 2
-        mid_y = (y1 + y2) / 2
+        # Place label at midpoint of first segment
+        mid_x = (points[0][0] + points[1][0]) / 2
+        mid_y = (points[0][1] + points[1][1]) / 2
         ax.text(mid_x, mid_y + 1, label, ha='center', va='center', 
                fontsize=7, bbox=dict(boxstyle="round,pad=0.2", 
                facecolor='white', alpha=0.8))
+
+def draw_component_symbol(ax, x, y, comp_type, label="", rotation=0):
+    """Draw standard IEEE electrical symbols"""
+    
+    if comp_type == 'motor_3ph':
+        # Three-phase motor symbol
+        circle = Circle((x, y), 3, facecolor='white', edgecolor='black', linewidth=2)
+        ax.add_patch(circle)
+        ax.text(x, y, 'M\n3~', ha='center', va='center', fontsize=10, fontweight='bold')
+        
+        # Draw three connection points
+        angles = [90, 210, 330]  # 120° apart
+        for i, angle in enumerate(angles):
+            rad = np.radians(angle)
+            conn_x = x + 3.5 * np.cos(rad)
+            conn_y = y + 3.5 * np.sin(rad)
+            ax.plot([x + 3 * np.cos(rad), conn_x], [y + 3 * np.sin(rad), conn_y], 'k-', linewidth=2)
+            ax.plot(conn_x, conn_y, 'ko', markersize=4)
+    
+    elif comp_type == 'transformer':
+        # Transformer symbol
+        ax.add_patch(Circle((x-1.5, y), 1.5, fill=False, edgecolor='black', linewidth=2))
+        ax.add_patch(Circle((x+1.5, y), 1.5, fill=False, edgecolor='black', linewidth=2))
+        ax.plot([x-3, x-1.5], [y, y], 'k-', linewidth=2)
+        ax.plot([x+1.5, x+3], [y, y], 'k-', linewidth=2)
+    
+    elif comp_type == 'contactor':
+        # Contactor symbol
+        rect = Rectangle((x-2, y-1.5), 4, 3, facecolor='lightgray', 
+                        edgecolor='black', linewidth=2)
+        ax.add_patch(rect)
+        ax.text(x, y, 'K', ha='center', va='center', fontsize=12, fontweight='bold')
+        
+        # Main contacts
+        for i in range(3):
+            contact_x = x - 1.5 + i * 1.5
+            ax.plot([contact_x, contact_x], [y+1.5, y+2.5], 'k-', linewidth=3)
+            ax.plot([contact_x-0.2, contact_x+0.2], [y+2, y+2], 'k-', linewidth=3)
+    
+    elif comp_type == 'circuit_breaker':
+        # Circuit breaker symbol
+        rect = Rectangle((x-1.5, y-2), 3, 4, facecolor='white', 
+                        edgecolor='black', linewidth=2)
+        ax.add_patch(rect)
+        ax.text(x, y, 'MCB', ha='center', va='center', fontsize=9, fontweight='bold')
+        
+        # Contacts
+        ax.plot([x, x], [y+2, y+3], 'k-', linewidth=2)
+        ax.plot([x, x], [y-2, y-3], 'k-', linewidth=2)
+    
+    # Add component label
+    if label:
+        ax.text(x, y-4, label, ha='center', va='center', fontsize=8)
 
 def draw_title_block(ax):
     """Draw title block with project information"""
