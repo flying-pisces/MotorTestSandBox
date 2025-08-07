@@ -32,7 +32,7 @@ const double MIN_ANGLE = 0.0;          // degrees (horizontal)
 const double MAX_ANGLE = 90.0;         // degrees (vertical)
 const double MAX_VELOCITY = 30.0;      // degrees/second
 const double ACCELERATION = 60.0;      // degrees/second²
-const int CYCLE_PAUSE_MS = 500;        // pause at each end position
+// NO PAUSE - Continuous motion without stopping as per requirement
 
 // Control parameters
 const double POSITION_TOLERANCE = 0.5; // degrees
@@ -110,7 +110,7 @@ public:
         return PENDULUM_MASS * 9.81 * PENDULUM_LENGTH * sin(angle_rad);
     }
     
-    // Generate smooth motion profile (trapezoidal)
+    // Generate smooth motion profile (trapezoidal) - CONTINUOUS without zero velocity at endpoints
     double generateMotionProfile(double start_pos, double end_pos, double current_time, double total_time) {
         double distance = end_pos - start_pos;
         double accel_time = MAX_VELOCITY / ACCELERATION;
@@ -138,12 +138,17 @@ public:
             position = start_pos + 0.5 * ACCELERATION * accel_time * accel_time + MAX_VELOCITY * t;
             velocity = MAX_VELOCITY;
         }
-        else {
-            // Deceleration phase
+        else if (current_time < total_time) {
+            // Deceleration phase - but NOT to zero velocity (continuous motion requirement)
             double t = current_time - accel_time - const_time;
             double t_remaining = total_time - current_time;
             position = end_pos - 0.5 * ACCELERATION * t_remaining * t_remaining;
             velocity = ACCELERATION * t_remaining;
+        }
+        else {
+            // At endpoint - maintain minimum velocity for continuous motion
+            position = end_pos;
+            velocity = 5.0; // Minimum velocity to ensure continuous motion (no stopping)
         }
         
         // Apply direction
@@ -218,9 +223,10 @@ public:
         log_file_.flush();
     }
     
-    // Main control loop
+    // Main control loop - CONTINUOUS MOTION WITHOUT STOPPING
     void runCyclingTest() {
-        std::cout << "Starting continuous cycling test...\n";
+        std::cout << "Starting continuous cycling test (NO STOPS)...\n";
+        std::cout << "Requirement: Continuous 0° ↔ 90° motion without stopping\n";
         std::cout << "Press Ctrl+C to stop safely\n\n";
         
         double motion_time = 3.0; // seconds for each 0° to 90° motion
@@ -235,7 +241,7 @@ public:
             double end_pos = direction_up_ ? MAX_ANGLE : MIN_ANGLE;
             
             if (elapsed <= motion_time) {
-                // Motion phase
+                // Motion phase - generate smooth continuous motion
                 target_position_ = generateMotionProfile(start_pos, end_pos, elapsed, motion_time);
                 sendMotorCommand(target_position_, current_velocity_);
                 logCycleData(direction_up_ ? "Moving_Up" : "Moving_Down");
@@ -251,14 +257,8 @@ public:
                     std::cout.flush();
                 }
                 
-            } else if (elapsed <= motion_time + CYCLE_PAUSE_MS / 1000.0) {
-                // Pause phase at end position
-                target_position_ = end_pos;
-                sendMotorCommand(target_position_, 0.0);
-                logCycleData("Pause");
-                
             } else {
-                // Switch direction and start new cycle
+                // IMMEDIATELY switch direction - NO PAUSE (continuous motion requirement)
                 direction_up_ = !direction_up_;
                 cycle_start_time = now;
                 
@@ -272,6 +272,9 @@ public:
                     (current_position_ >= MAX_ANGLE - POSITION_TOLERANCE && direction_up_)) {
                     std::cout << "\nWarning: Position limit reached!\n";
                 }
+                
+                // Continue with immediate motion in new direction
+                continue;
             }
             
             // Control loop timing
